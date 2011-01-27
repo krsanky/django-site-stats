@@ -48,12 +48,11 @@ class Visit(models.Model):
 
 class ParseEvent(models.Model):
     """
-    that with first_line will let us only read new log entries on every parse
+    last_position along with first_line will let us only read new log entries on every parse
     """
     datetime = models.DateTimeField(auto_now_add=True)
-
-    #1st line of file, to use as a file-id
     first_line = models.CharField(max_length=256)
+    last_position = models.IntegerField() #from <file>.tell()
 
-    #the number of bytes parsed from the beginning ... from file.tell()
-    last_position = models.IntegerField()
+    class Meta:
+        get_latest_by = "datetime"

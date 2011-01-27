@@ -1,8 +1,12 @@
 from datetime import datetime
 
-from site_stats.models import Visitor, BrowserString, RequestMethod, StatusCode, Visit #ParseEvent
+from django.conf import settings
 
-log_file = "/var/log/lighttpd/access.log"
+from site_stats.models import Visitor, BrowserString, RequestMethod, StatusCode, Visit
+from site_stats.models import ParseEvent
+
+log_file = settings.SITE_STATS_LOG_FILE
+
 line1 = '127.0.0.1 abc.oldcode.org - [26/Jan/2011:12:23:28 -0500] "GET /favicon.ico HTTP/1.1" 404 345 "-" "Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.8) Gecko/20100723 Firefox/3.6.8"'
 
 def parse_log_line(line):
@@ -61,31 +65,51 @@ for now we can just parse it all.
             }
 
 
-def main():
+def parse():
     """
-    this is the 'main'
     """
-
-    with open(log_file, 'r') as f:
-        for line in f:
-            #print line[:20]
-            data = parse_log_line(line)
-            #print data
-            visit = Visit()
-
-            for f in ('datetime', 'path', 'site'):
-                setattr(visit, f, data[f])
-
-            visit.visitor, _ = Visitor.objects.get_or_create(pk=data['visitor'])
-            #visit.visitor.save()
-            visit.method, _ = RequestMethod.objects.get_or_create(pk=data['method'])
-            visit.code, _ = StatusCode.objects.get_or_create(pk=data['code'])
-            visit.browser_string, _ = BrowserString.objects.get_or_create(pk=data['browser_string'])
-
-            visit.save()
+    try:
+        last_pe = ParseEvent.objects.latest()
+    except Exception as e:
+        last_pe = ParseEvent()
+        #pe.last_position = 0
+        last_pe.first_line = 'first_linefirst_linefirst_linefirst_linefirst_linefirst_linefirst_linefirst_line'
+        #pe.save()
 
 
 
-#file.seek(offset)
-#file.tell()
+    file_tell = 0
+    f = open(log_file, 'r')
+    first_line = f.readline()
+    if first_line == last_pe.first_line:
+        print "MATCH skip ahead ... %s" % last_pe.last_position,
+        f.seek(last_pe.last_position)
+    else:
+        f.seek(0)
+
+    for line in f:
+        file_tell = f.tell()
+
+        print "tell:%s" % file_tell,
+        data = parse_log_line(line)
+        #print data
+        visit = Visit()
+
+        for fld in ('datetime', 'path', 'site'):
+            setattr(visit, fld, data[fld])
+
+        visit.visitor, _ = Visitor.objects.get_or_create(pk=data['visitor'])
+        visit.method, _ = RequestMethod.objects.get_or_create(pk=data['method'])
+        visit.code, _ = StatusCode.objects.get_or_create(pk=data['code'])
+        visit.browser_string, _ = BrowserString.objects.get_or_create(pk=data['browser_string'])
+
+        visit.save()
+
+    f.close()
+
+    pe = ParseEvent()
+    pe.last_position = file_tell
+    pe.first_line = first_line
+    pe.save()
+
 
