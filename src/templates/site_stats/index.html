@@ -1,8 +1,16 @@
-{% extends "base.html" %}
+{% extends "index.html" %}
 
 {% block main_col %}
 
-<h2>site stats</h2>
+  <h2>site stats</h2>
+
+  <p>gmap-key: {{ gmap_key }}</p>
+
+  <ul>
+    {% for ip in ips %}
+      <li>{{ ip }}: {{ ip.lat_lon }}</li>
+    {% endfor %}
+  </ul>
 
 {% endblock %}
 

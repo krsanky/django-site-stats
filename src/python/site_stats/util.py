@@ -2,7 +2,9 @@ from datetime import datetime
 
 from django.conf import settings
 
-from site_stats.models import Visitor, BrowserString, RequestMethod, StatusCode, Visit
+from logger import log
+
+from site_stats.models import VisitorIP, BrowserString, RequestMethod, StatusCode, Visit
 from site_stats.models import ParseEvent
 
 log_file = settings.SITE_STATS_LOG_FILE
@@ -23,12 +25,38 @@ split out the logging for the seperate vhosts ??????????????????????
 ... /var/www/vhost/oldcode.org/oldcode//var/www/vhost/oldcode.org/oldcode/log/lighttpd_access.log
 
 for now we can just parse it all.
-    """
 
-    # SITE and VISITOR
+
+def parse(filename):
+    'Return tuple of dictionaries containing file data.'
+    def make_entry(x):
+        return {
+            'server_ip':x.group('ip'),
+            'uri':x.group('uri'),
+            'time':x.group('time'),
+            'status_code':x.group('status_code'),
+            'referral':x.group('referral'),
+            'agent':x.group('agent'),
+            }
+    log_re = '(?P<ip>[.\d]+) - - \[(?P<time>.*?)\] "GET (?P<uri>.*?) HTTP/1.\d" (?P<status_code>\d+) \d+ "(?P<referral>.*?)" "(?P<agent>.*?)"'
+    search = re.compile(log_re).search
+    matches = (search(line) for line in file(filename))
+    return (make_entry(x) for x in matches if x)
+
+
+
+    """
+    #log.debug(line)
+
+    # SITE and VISITOR (VISITOR means ip-address)
     [vis_n_site, rest] = line.split('-',1)
-    #print "[%s]" % (vis_n_site,)
-    vis, site = vis_n_site.strip().split(' ',1)
+    log.debug("v_n_s:[%s]" % vis_n_site,)
+    try:
+        vis, site = vis_n_site.strip().split(' ',1)
+    except ValueError as e:
+        log.debug("%s" % e,)
+        site = ''
+        vis = vis_n_site.strip()
     #print "vis[%s] site[%s]" % (vis, site)
 
     #print rest
@@ -58,7 +86,7 @@ for now we can just parse it all.
     return {'site': site,
             'datetime': dt,
             'path': path,
-            'visitor': vis,
+            'ip': vis,
             'method': method,
             'code': code,
             'browser_string': br_str,
@@ -82,15 +110,16 @@ def parse():
     f = open(log_file, 'r')
     first_line = f.readline()
     if first_line == last_pe.first_line:
-        print "MATCH skip ahead ... %s" % last_pe.last_position,
+        log.debug("MATCH skip ahead ... %s" % last_pe.last_position,)
         f.seek(last_pe.last_position)
     else:
         f.seek(0)
 
+    file_tell = f.tell() #???
     for line in f:
         file_tell = f.tell()
 
-        print "tell:%s" % file_tell,
+        #print "tell:%s" % file_tell,
         data = parse_log_line(line)
         #print data
         visit = Visit()
@@ -98,10 +127,10 @@ def parse():
         for fld in ('datetime', 'path', 'site'):
             setattr(visit, fld, data[fld])
 
-        visit.visitor, _ = Visitor.objects.get_or_create(pk=data['visitor'])
+        visit.ip, _ = VisitorIP.objects.get_or_create(pk=data['ip'])
         visit.method, _ = RequestMethod.objects.get_or_create(pk=data['method'])
         visit.code, _ = StatusCode.objects.get_or_create(pk=data['code'])
-        visit.browser_string, _ = BrowserString.objects.get_or_create(pk=data['browser_string'])
+        visit.browser_string, _ = BrowserString.objects.get_or_create(string=data['browser_string'])
 
         visit.save()
 

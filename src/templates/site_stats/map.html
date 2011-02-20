@@ -1,0 +1,109 @@
+{% extends "index.html" %}
+
+{% block extra-head %}
+  {{ block.super }}
+
+  <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key={{ gmap_key }}&amp;sensor=false"
+          type="text/javascript"></script>
+  <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"
+          type="text/javascript" charset="utf-8"></script>
+
+
+  {#<link rel="stylesheet" href="/style/alcyone_map/style.css" type="text/css" />#}
+  <style type="text/css">
+    #gmap {
+        width:698px;
+        height:420px;
+        border:1px solid #CCC;
+        clear:both;
+        margin:0 0 9px 0;
+    }
+  </style>
+
+{% endblock %}
+
+{% block main_col %}
+
+  <h2>visitors map</h2>
+
+  <div id="gmap"></div>
+
+  <script type="text/javascript">
+    function makers_mark(point, html, icon){
+        var marker = new GMarker(point, {icon: icon});
+        GEvent.addListener(marker, "click", function() {
+            marker.openInfoWindowHtml(html);
+        });
+        return marker;
+    }
+
+    function load_gmap()
+    {
+        if (GBrowserIsCompatible()) {
+
+	    //do the little colored icons:
+	    var icon = new GIcon();
+	    icon.image = "http://labs.google.com/ridefinder/images/mm_20_red.png";
+	    icon.shadow = "http://labs.google.com/ridefinder/images/mm_20_shadow.png";
+	    icon.iconSize = new GSize(12, 20);
+	    icon.shadowSize = new GSize(22, 20);
+	    icon.iconAnchor = new GPoint(6, 20);
+	    icon.infoWindowAnchor = new GPoint(5, 1);
+	    iconblue =   new GIcon(icon,"http://labs.google.com/ridefinder/images/mm_20_blue.png");
+	    icongreen =  new GIcon(icon,"http://labs.google.com/ridefinder/images/mm_20_green.png");
+	    iconyellow = new GIcon(icon,"http://labs.google.com/ridefinder/images/mm_20_yellow.png");
+
+	    //setup the base map(includiong the current (and center) point))
+	    var map = new GMap2(document.getElementById("gmap"));
+	    map.setMapType(G_SATELLITE_MAP);
+	    //map.addControl(new GSmallMapControl());
+	    map.addControl(new GLargeMapControl());
+	    map.addControl(new GMapTypeControl());
+            //(29.752300262451172, -95.366996765136719) oldcode server
+            var cur_marker = new GMarker(new GLatLng(29.752300262451172, -95.366996765136719));
+	    map.setCenter(cur_marker.getLatLng(),7); //lower zooms out
+
+	    GEvent.addListener(cur_marker, "click", function() {
+	        cur_marker.openInfoWindowHtml(
+	            "{{ cur_coord.timestamp }}<br/>"+
+                    "latitude: {{ cur_coord.latitude }}<br/>"+
+                    "longitude: {{ cur_coord.longitude }}");
+	    });
+	    map.addOverlay(cur_marker);
+
+	    {% if ips %}
+	    //add history markers
+	    var h_markers = [];
+
+	    var mmgr = new MarkerManager(map);
+
+            {% comment %}
+            {% for ip in ips %}
+                <li>{{ ip }}: {{ ip.lat_lon }}</li>
+            {% endfor %}
+            {% endcomment %}
+
+            {#% for coord in coords %#}
+            {% for ip in ips %}
+            h_markers.push(makers_mark(new GLatLng({{ ip.lat_lon_str }}),
+                                       "{{ coord.timestamp }}<br/>latitude: {{ coord.latitude }}<br/>longitude: {{ coord.longitude }}",
+                                       iconyellow));
+            {% endfor %}
+
+            mmgr.addMarkers(h_markers,0,17);
+            mmgr.refresh();
+            {% endif %}
+        }
+    }
+
+    jQuery(function(){load_gmap();});
+
+    jQuery(window).unload(function(){GUnload();});
+
+  </script>
+
+
+
+
+
+{% endblock %}
