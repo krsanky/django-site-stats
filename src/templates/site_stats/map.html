@@ -12,11 +12,12 @@
   {#<link rel="stylesheet" href="/style/alcyone_map/style.css" type="text/css" />#}
   <style type="text/css">
     #gmap {
-        width:698px;
-        height:420px;
+        /*width: 900px;*/
+        height: 600px;
         border:1px solid #CCC;
         clear:both;
         margin:0 0 9px 0;
+        padding: 5px 10px;
     }
   </style>
 
@@ -24,18 +25,22 @@
 
 {% block main_col %}
 
-  <h2>visitors map</h2>
+
+
+  {#<h2>visitors map</h2>#}
 
   <div id="gmap"></div>
 
   <script type="text/javascript">
-    function makers_mark(point, html, icon){
-        var marker = new GMarker(point, {icon: icon});
-        GEvent.addListener(marker, "click", function() {
-            marker.openInfoWindowHtml(html);
-        });
-        return marker;
-    }
+
+
+  function makers_mark(point, html, icon){
+      var marker = new GMarker(point, {icon: icon});
+      GEvent.addListener(marker, "click", function() {
+          marker.openInfoWindowHtml(html);
+      });
+      return marker;
+  }
 
     function load_gmap()
     {
@@ -55,7 +60,7 @@
 
 	    //setup the base map(includiong the current (and center) point))
 	    var map = new GMap2(document.getElementById("gmap"));
-	    map.setMapType(G_SATELLITE_MAP);
+	    map.setMapType(G_NORMAL_MAP);
 	    //map.addControl(new GSmallMapControl());
 	    map.addControl(new GLargeMapControl());
 	    map.addControl(new GMapTypeControl());
@@ -65,9 +70,9 @@
 
 	    GEvent.addListener(cur_marker, "click", function() {
 	        cur_marker.openInfoWindowHtml(
-	            "{{ cur_coord.timestamp }}<br/>"+
-                    "latitude: {{ cur_coord.latitude }}<br/>"+
-                    "longitude: {{ cur_coord.longitude }}");
+                    "oldcode server <br/>" +
+                    "latitude: 29.752300262451172<br/>"+
+                    "longitude: -95.366996765136719");
 	    });
 	    map.addOverlay(cur_marker);
 
@@ -77,16 +82,9 @@
 
 	    var mmgr = new MarkerManager(map);
 
-            {% comment %}
-            {% for ip in ips %}
-                <li>{{ ip }}: {{ ip.lat_lon }}</li>
-            {% endfor %}
-            {% endcomment %}
-
-            {#% for coord in coords %#}
             {% for ip in ips %}
             h_markers.push(makers_mark(new GLatLng({{ ip.lat_lon_str }}),
-                                       "{{ coord.timestamp }}<br/>latitude: {{ coord.latitude }}<br/>longitude: {{ coord.longitude }}",
+                                       "ip: {{ ip.pk }}<br/>latitude: {{ ip.lat }}<br/>longitude: {{ ip.lon }}",
                                        iconyellow));
             {% endfor %}
 
@@ -96,7 +94,10 @@
         }
     }
 
-    jQuery(function(){load_gmap();});
+    $(function(){
+        //$("#gmap").css("width", $('#gmap').innerWidth() - 30);
+        load_gmap();
+    });
 
     jQuery(window).unload(function(){GUnload();});
 
