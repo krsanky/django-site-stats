@@ -108,7 +108,7 @@ def parse():
 
     file_tell = 0
     f = open(log_file, 'r')
-    first_line = f.readline()
+    first_line = f.readline()[:256]
     if first_line == last_pe.first_line:
         log.debug("MATCH skip ahead ... %s" % last_pe.last_position,)
         f.seek(last_pe.last_position)
@@ -124,13 +124,16 @@ def parse():
         #print data
         visit = Visit()
 
-        for fld in ('datetime', 'path', 'site'):
-            setattr(visit, fld, data[fld])
+        #for fld in ('datetime', 'path', 'site'):
+        #    setattr(visit, fld, data[fld])
+        visit.datetime = data['datetime']
+        visit.path = data['path'][:256]
+        visit.site = data['site'][:256]
 
         visit.ip, _ = VisitorIP.objects.get_or_create(pk=data['ip'])
         visit.method, _ = RequestMethod.objects.get_or_create(pk=data['method'])
         visit.code, _ = StatusCode.objects.get_or_create(pk=data['code'])
-        visit.browser_string, _ = BrowserString.objects.get_or_create(string=data['browser_string'])
+        visit.browser_string, _ = BrowserString.objects.get_or_create(string=data['browser_string'][:256])
 
         visit.save()
 
@@ -138,7 +141,7 @@ def parse():
 
     pe = ParseEvent()
     pe.last_position = file_tell
-    pe.first_line = first_line
+    pe.first_line = first_line[:256]
     pe.save()
 
 
