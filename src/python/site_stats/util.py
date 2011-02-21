@@ -7,8 +7,8 @@ from logger import log
 from site_stats.models import VisitorIP, BrowserString, RequestMethod, StatusCode, Visit
 from site_stats.models import ParseEvent
 
-#log_file = settings.SITE_STATS_LOG_FILE
-log_file = '/var/www/vhost/abc.oldcode.org/oldcode/tmp/all.log'
+log_file = settings.SITE_STATS_LOG_FILE
+#log_file = '/var/www/vhost/oldcode.org/oldcode/tmp/all.log'
 
 line1 = '127.0.0.1 abc.oldcode.org - [26/Jan/2011:12:23:28 -0500] "GET /favicon.ico HTTP/1.1" 404 345 "-" "Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.8) Gecko/20100723 Firefox/3.6.8"'
 
