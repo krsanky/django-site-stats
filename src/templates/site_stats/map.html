@@ -84,7 +84,9 @@
 
             {% for ip in ips %}
             h_markers.push(makers_mark(new GLatLng({{ ip.lat_lon_str }}),
-                                       "ip: {{ ip.pk }}<br/>latitude: {{ ip.lat }}<br/>longitude: {{ ip.lon }}",
+                                       {% if perms.site_stats %} "ip: {{ ip.pk }}<br/>" + {% endif %}
+                                       "latitude: {{ ip.lat }}<br/>longitude: {{ ip.lon }}",
+
                                        iconyellow));
             {% endfor %}
 
