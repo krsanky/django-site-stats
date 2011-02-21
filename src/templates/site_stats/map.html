@@ -66,7 +66,7 @@
 	    map.addControl(new GMapTypeControl());
             //(29.752300262451172, -95.366996765136719) oldcode server
             var cur_marker = new GMarker(new GLatLng(29.752300262451172, -95.366996765136719));
-	    map.setCenter(cur_marker.getLatLng(),7); //lower zooms out
+	    map.setCenter(cur_marker.getLatLng(),4); //lower zooms out
 
 	    GEvent.addListener(cur_marker, "click", function() {
 	        cur_marker.openInfoWindowHtml(
