@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+*/45 * * * * /var/www/vhost/oldcode.org/oldcode/apps/django-site-stats/scripts/cron.py > /dev/null 2>&1
+"""
+
 import sys, os
 
 my_dir = os.path.dirname(os.path.realpath( __file__ ))
@@ -18,13 +22,6 @@ PYTHONPATH = os.path.join(BASEDIR, 'src/python')
 sys.path.insert(0, PYTHONPATH)
 #print PYTHONPATH
 
-from site_stats.models import Visit
+from site_stats.util import parse
 
-v = Visit.objects.all()
-print v.count()
-
-def test1():
-    """
-    """
-    print "test:%s" % ('asd',)
-
+parse()
